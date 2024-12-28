@@ -21,6 +21,16 @@
     .multiple-select option:hover {
         background-color: ##f0f0f0;
     }
+    .join-row {
+        margin: 10px 0;
+        padding: 10px;
+        background: ##f9f9f9;
+        border-radius: 4px;
+    }
+    .join-row select {
+        margin: 0 5px;
+        padding: 5px;
+    }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
 </head>
@@ -38,7 +48,7 @@
             ORDER BY SCHEMA_NAME
         </cfquery>
         
-        <form action="export1.cfm" method="post">
+        <form action="export.cfm" method="post">
             <select name="selectedSchema" onchange="this.form.submit()">
                 <option value="">Select Schema</option>
                 <cfloop query="getSchemas">
@@ -59,9 +69,9 @@
             ORDER BY TABLE_NAME, ORDINAL_POSITION
         </cfquery>
 
-        <form action="export1.cfm" method="post" id="tableForm">
+        <form action="export.cfm" method="post" id="tableForm">
             <input type="hidden" name="selectedSchema" value="#form.selectedSchema#">
-            <select name="selectedTables[]" multiple size="10" style="width: 300px; height: 200px;" class="multiple-select">
+            <select name="selectedTables" multiple size="10" style="width: 300px; height: 200px;" class="multiple-select">
                 <cfset prevTable = "">
                 <cfloop query="getTables">
                     <cfif prevTable neq TABLE_NAME>
@@ -117,8 +127,19 @@
 <script>
 // JavaScript functions for handling the UI interactions
 function showJoinBuilder() {
-    const selectedTables = Array.from(document.querySelector('select[name="selectedTables"]').selectedOptions)
+    console.log('showJoinBuilder called');
+    const tableSelect = document.querySelector('select[name="selectedTables"]');
+    console.log('Selected tables:', tableSelect);
+    
+    if (!tableSelect) {
+        console.error('Table select element not found');
+        return;
+    }
+
+    const selectedTables = Array.from(tableSelect.selectedOptions)
         .map(option => option.value);
+    
+    console.log('Selected tables:', selectedTables);
     
     if (selectedTables.length < 1) {
         alert('Please select at least one table');
@@ -130,6 +151,7 @@ function showJoinBuilder() {
 }
 
 function buildJoinInterface(tables) {
+    console.log('Building join interface for tables:', tables);
     const joinConfig = document.getElementById('joinConfig');
     joinConfig.innerHTML = '';
 
@@ -163,13 +185,12 @@ function buildJoinInterface(tables) {
     joinConfig.innerHTML = html;
 
     // Load columns for join configuration
-    loadTableColumns();
+    loadTableColumns(tables);
 }
 
-function loadTableColumns() {
-    // This would make an AJAX call to get columns for selected tables
-    // For demo, we'll use a placeholder
-    console.log('Loading columns...');
+async function loadTableColumns(tables) {
+    // We'll implement this next to actually load the columns
+    console.log('Loading columns for tables:', tables);
 }
 
 function showColumnSelector() {
@@ -180,15 +201,29 @@ function showColumnSelector() {
 
 function loadAvailableColumns() {
     // This would make an AJAX call to get all available columns
-    // For demo, we'll use a placeholder
     console.log('Loading available columns...');
 }
 
 // Initialize column sorting
-new Sortable(document.getElementById('selectedColumns'), {
-    animation: 150,
-    ghostClass: 'sortable-ghost'
-});
+const selectedColumns = document.getElementById('selectedColumns');
+if (selectedColumns) {
+    new Sortable(selectedColumns, {
+        animation: 150,
+        ghostClass: 'sortable-ghost'
+    });
+}
+
+function gatherJoinConfig() {
+    const joins = [];
+    const joinRows = document.querySelectorAll('.join-row');
+    joinRows.forEach((row, index) => {
+        const joinType = row.querySelector(`select[name="joinType${index + 1}"]`).value;
+        const leftCol = row.querySelector(`select[name="leftColumn${index + 1}"]`).value;
+        const rightCol = row.querySelector(`select[name="rightColumn${index + 1}"]`).value;
+        joins.push(`${joinType} ON ${leftCol} = ${rightCol}`);
+    });
+    return joins;
+}
 
 function generateStoredProcedure() {
     // Gather all configuration
