@@ -1,4 +1,5 @@
 <!--- getColumns.cfm --->
+<cfheader name="Content-Type" value="application/json">
 <cfif structKeyExists(form, "schema") AND structKeyExists(form, "table")>
     <cfquery name="getColumns" datasource="dashboard_portal">
         SELECT COLUMN_NAME, DATA_TYPE
@@ -8,9 +9,16 @@
         ORDER BY ORDINAL_POSITION
     </cfquery>
     
-    <cfcontent type="application/json">
-    <cfoutput>#serializeJSON(getColumns)#</cfoutput>
+    <!--- Convert query to array of structs for proper JSON formatting --->
+    <cfset columnsArray = []>
+    <cfloop query="getColumns">
+        <cfset arrayAppend(columnsArray, {
+            "COLUMN_NAME": COLUMN_NAME,
+            "DATA_TYPE": DATA_TYPE
+        })>
+    </cfloop>
+    
+    <cfoutput>#serializeJSON(columnsArray)#</cfoutput>
 <cfelse>
-    <cfcontent type="application/json">
-    <cfoutput>{"error": "Missing required parameters"}</cfoutput>
+    <cfoutput>#serializeJSON({"error": "Missing required parameters"})#</cfoutput>
 </cfif>
