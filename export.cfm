@@ -48,7 +48,7 @@
             ORDER BY SCHEMA_NAME
         </cfquery>
         
-        <form action="export.cfm" method="post">
+        <form action="export1.cfm" method="post">
             <select name="selectedSchema" onchange="this.form.submit()">
                 <option value="">Select Schema</option>
                 <cfloop query="getSchemas">
@@ -69,7 +69,7 @@
             ORDER BY TABLE_NAME, ORDINAL_POSITION
         </cfquery>
 
-        <form action="export.cfm" method="post" id="tableForm">
+        <form action="export1.cfm" method="post" id="tableForm">
             <input type="hidden" name="selectedSchema" value="#form.selectedSchema#">
             <select name="selectedTables" multiple size="10" style="width: 300px; height: 200px;" class="multiple-select">
                 <cfset prevTable = "">
